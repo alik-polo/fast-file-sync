@@ -7,6 +7,7 @@ import com.hawk.fast_file_sync.enums.FileStatus;
 import com.hawk.fast_file_sync.enums.FileType;
 import com.hawk.fast_file_sync.exception.OperationCancelledException;
 import com.hawk.fast_file_sync.exception.TraversalException;
+import com.hawk.fast_file_sync.filter.ScanFilter;
 import com.hawk.fast_file_sync.model.CancellationToken;
 import com.hawk.fast_file_sync.scan.FileScanner;
 import java.io.File;
@@ -20,6 +21,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,6 +29,23 @@ import java.util.Set;
  */
 public class StandardStreamScanner implements FileScanner {
   private static final HashFunction HASH = Hashing.murmur3_128();
+  private final List<ScanFilter> filters;
+
+  /**
+   * Creates a StandardStreamScanner with the specified list of filters.
+   *
+   * @param filters the list of ScanFilter to apply during scanning
+   */
+  public StandardStreamScanner(List<ScanFilter> filters) {
+    this.filters = filters == null ? List.of() : filters;
+  }
+
+  /**
+   * Creates a StandardStreamScanner without any filters.
+   */
+  public StandardStreamScanner() {
+    this(List.of());
+  }
 
   /**
    * Scans the specified root directory and passes metadata of each file and directory
@@ -43,7 +62,7 @@ public class StandardStreamScanner implements FileScanner {
   public void scan(Path root, ScanConsumer consumer, CancellationToken cancellationToken)
       throws TraversalException, OperationCancelledException {
 
-    FileVisitor visitor = new FileVisitor(root, consumer, cancellationToken);
+    FileVisitor visitor = new FileVisitor(root, consumer, cancellationToken, filters);
 
     try {
       Files.walkFileTree(
@@ -66,14 +85,17 @@ public class StandardStreamScanner implements FileScanner {
     private final Path root;
     private final ScanConsumer consumer;
     private final CancellationToken cancellationToken;
+    private final List<ScanFilter> filters;
     private final Set<Object> visited;
 
     FileVisitor(Path root,
                 ScanConsumer consumer,
-                CancellationToken cancellationToken) {
+                CancellationToken cancellationToken,
+                List<ScanFilter> filters) {
       this.root = root;
       this.consumer = consumer;
       this.cancellationToken = cancellationToken;
+      this.filters = filters;
       this.visited = new HashSet<>();
     }
 
@@ -81,6 +103,12 @@ public class StandardStreamScanner implements FileScanner {
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
         throws IOException {
       cancellationToken.throwIfCancelled();
+
+      for (ScanFilter filter : filters) {
+        if (!filter.accept(file, attrs)) {
+          return FileVisitResult.CONTINUE;
+        }
+      }
 
       process(file, attrs);
       return FileVisitResult.CONTINUE;
@@ -93,6 +121,12 @@ public class StandardStreamScanner implements FileScanner {
 
       if (dir.equals(root)) {
         return FileVisitResult.CONTINUE;
+      }
+
+      for (ScanFilter filter : filters) {
+        if (!filter.accept(dir, attrs)) {
+          return FileVisitResult.SKIP_SUBTREE;
+        }
       }
 
       Object key = attrs.fileKey();
