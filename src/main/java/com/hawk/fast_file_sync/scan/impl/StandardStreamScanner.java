@@ -158,15 +158,13 @@ public class StandardStreamScanner implements FileScanner {
       long size = attrs.size();
       long modified = attrs.lastModifiedTime().toMillis();
       byte flag = defineType(attrs);
-      byte status = FileStatus.NONE.getValue();
 
       consumer.accept(
           relativeHash,
           relative,
           size,
           modified,
-          flag,
-          status
+          flag
       );
     }
 

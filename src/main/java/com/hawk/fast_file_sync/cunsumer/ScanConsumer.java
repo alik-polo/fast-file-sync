@@ -13,13 +13,11 @@ public interface ScanConsumer {
    * @param size the size of the file or directory in bytes
    * @param modified the last modification timestamp in milliseconds since epoch
    * @param flag a byte representing file-specific flags
-   * @param status a byte representing the processing or scanning status
    */
   void accept(long relativePathHash,
               String relativePath,
               long size,
               long modified,
-              byte flag,
-              byte status);
+              byte flag);
 
 }

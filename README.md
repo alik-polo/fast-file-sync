@@ -53,17 +53,15 @@ Detailed architecture notes will be available in `/docs`.
 Project is in early development stage.
 
 Current focus:
-- Project structure
-- Core abstractions
-- Performance-oriented design decisions
+- Synchronization engine
 
 ---
 
 ## 📌 Roadmap (MVP)
 
-- [ ] Directory scanner
-- [ ] Snapshot buffer
-- [ ] Streaming diff engine
+- [X] Directory scanner
+- [X] Snapshot buffer
+- [X] Streaming diff engine
 - [ ] Sync engine
 - [ ] UI interface
 - [ ] Benchmark module
