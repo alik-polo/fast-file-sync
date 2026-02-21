@@ -43,7 +43,6 @@ public class SafeSyncExecutor implements SyncExecutor {
     if (type == FileType.REGULAR_FILE.getValue()) {
       handleRegularFiles(source, target);
     }
-
   }
 
   /**
