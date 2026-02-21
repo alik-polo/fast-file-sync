@@ -1,4 +1,4 @@
-package com.hawk.fast_file_sync.sync;
+package com.hawk.fast_file_sync.sync.strategy;
 
 import com.hawk.fast_file_sync.model.BufferSnapshot;
 import java.io.IOException;

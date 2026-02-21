@@ -1,9 +1,8 @@
-package com.hawk.fast_file_sync.sync.impl;
+package com.hawk.fast_file_sync.sync.strategy.impl;
 
 import com.hawk.fast_file_sync.enums.FileStatus;
-import com.hawk.fast_file_sync.enums.FileType;
 import com.hawk.fast_file_sync.model.BufferSnapshot;
-import com.hawk.fast_file_sync.sync.StreamSyncStrategy;
+import com.hawk.fast_file_sync.sync.strategy.StreamSyncStrategy;
 import com.hawk.fast_file_sync.sync.conflict.ConflictHandler;
 import com.hawk.fast_file_sync.sync.executor.SyncExecutor;
 import java.io.IOException;

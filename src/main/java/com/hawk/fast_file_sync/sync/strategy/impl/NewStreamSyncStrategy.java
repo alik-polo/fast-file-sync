@@ -1,28 +1,28 @@
-package com.hawk.fast_file_sync.sync.impl;
+package com.hawk.fast_file_sync.sync.strategy.impl;
 
 import com.hawk.fast_file_sync.enums.FileStatus;
-import com.hawk.fast_file_sync.enums.FileType;
 import com.hawk.fast_file_sync.model.BufferSnapshot;
-import com.hawk.fast_file_sync.sync.StreamSyncStrategy;
+import com.hawk.fast_file_sync.sync.strategy.StreamSyncStrategy;
 import com.hawk.fast_file_sync.sync.conflict.ConflictHandler;
 import com.hawk.fast_file_sync.sync.executor.SyncExecutor;
 import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * Stream synchronization strategy that prioritizes the left source.
+ * Stream synchronization strategy that creates or updates entries
+ * in the target based on the latest available source state.
  */
-public class LeftStreamSyncStrategy implements StreamSyncStrategy {
+public class NewStreamSyncStrategy implements StreamSyncStrategy {
   private final SyncExecutor syncExecutor;
   private final ConflictHandler conflictHandler;
 
   /**
-   * Creates a LeftStreamSyncStrategy with the specified executor and conflict handler.
+   * Creates a NewStreamSyncStrategy with the specified executor and conflict handler.
    *
    * @param syncExecutor the executor used to perform file synchronization
    * @param conflictHandler the handler used to resolve conflicts
    */
-  public LeftStreamSyncStrategy(SyncExecutor syncExecutor,
+  public NewStreamSyncStrategy(SyncExecutor syncExecutor,
                                 ConflictHandler conflictHandler) {
     this.syncExecutor = syncExecutor;
     this.conflictHandler = conflictHandler;
@@ -30,8 +30,7 @@ public class LeftStreamSyncStrategy implements StreamSyncStrategy {
 
   /**
    * Handles synchronization for the entry at the given index.
-   * Executes direct copy if the entry exists only on the right,
-   * or delegates to the conflict handler if a conflict is detected.
+   * Copies entries from the appropriate source or delegates conflict resolution.
    *
    * @param snapshot the buffer snapshot containing entry metadata
    * @param index the index of the entry to process
@@ -49,7 +48,13 @@ public class LeftStreamSyncStrategy implements StreamSyncStrategy {
 
     byte status = snapshot.getStatus(index);
 
-    if (status == FileStatus.RIGHT_ONLY.getValue()) {
+    if (status == FileStatus.LEFT_ONLY.getValue()
+        || status == FileStatus.SAME.getValue()) {
+      Path source = leftRoot.resolve(snapshot.getRelativePath(index));
+      Path target = targetRoot.resolve(snapshot.getRelativePath(index));
+
+      syncExecutor.execute(source, target, snapshot.getFlag(index));
+    } else if (status == FileStatus.RIGHT_ONLY.getValue()) {
       Path source = rightRoot.resolve(snapshot.getRelativePath(index));
       Path target = targetRoot.resolve(snapshot.getRelativePath(index));
 

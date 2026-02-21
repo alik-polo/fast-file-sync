@@ -55,6 +55,7 @@ Project is in early development stage.
 Current focus:
 - Synchronization engine
 - Conflict resolving
+- Error handle strategies (fast-fail, best-effort)
 
 ---
 
