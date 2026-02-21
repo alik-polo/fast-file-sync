@@ -64,7 +64,7 @@ Current focus:
 - [X] Snapshot buffer
 - [X] Streaming diff engine
 - [ ] Sync engine
-- [ ] UI interface
+- [ ] GUI interface
 - [ ] Benchmark module
 
 ---

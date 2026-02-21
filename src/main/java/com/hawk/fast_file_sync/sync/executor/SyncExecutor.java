@@ -15,6 +15,6 @@ public interface SyncExecutor {
    * @param target the target path to copy to
    * @throws IOException if an I/O error occurs during execution
    */
-  void execute(Path source, Path target) throws IOException;
+  void execute(Path source, Path target, byte type) throws IOException;
 
 }

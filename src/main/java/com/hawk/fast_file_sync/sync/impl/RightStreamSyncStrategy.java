@@ -47,18 +47,13 @@ public class RightStreamSyncStrategy implements StreamSyncStrategy {
                      Path rightRoot,
                      Path targetRoot) throws IOException {
 
-    if (FileType.UNKNOWN.getValue() == snapshot.getFlag(index)) {
-      System.out.println("UNKNOWN FILE_TYPE: " + snapshot.getRelativePath(index));
-      return;
-    }
-
     byte status = snapshot.getStatus(index);
 
     if (status == FileStatus.LEFT_ONLY.getValue()) {
       Path source = leftRoot.resolve(snapshot.getRelativePath(index));
       Path target = targetRoot.resolve(snapshot.getRelativePath(index));
 
-      syncExecutor.execute(source, target);
+      syncExecutor.execute(source, target, snapshot.getFlag(index));
     } else if (status == FileStatus.CONFLICT.getValue()) {
       conflictHandler.handle(snapshot, index, leftRoot, rightRoot, targetRoot);
     }
