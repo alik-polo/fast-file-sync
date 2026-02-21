@@ -54,6 +54,7 @@ Project is in early development stage.
 
 Current focus:
 - Synchronization engine
+- Conflict resolving
 
 ---
 
