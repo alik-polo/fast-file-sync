@@ -53,8 +53,9 @@ Detailed architecture notes will be available in `/docs`.
 Project is in early development stage.
 
 Current focus:
-- Synchronization engine
-- Conflict resolving
+- Application configuration
+- Application session
+- Session Management
 - Error handle strategies (fast-fail, best-effort)
 
 ---
@@ -64,7 +65,8 @@ Current focus:
 - [X] Directory scanner
 - [X] Snapshot buffer
 - [X] Streaming diff engine
-- [ ] Sync engine
+- [X] Sync engine
+- [ ] Application configuration
 - [ ] GUI interface
 - [ ] Benchmark module
 
