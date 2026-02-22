@@ -53,9 +53,7 @@ Detailed architecture notes will be available in `/docs`.
 Project is in early development stage.
 
 Current focus:
-- Application configuration
-- Application session
-- Session Management
+- Tests
 - Error handle strategies (fast-fail, best-effort)
 
 ---
@@ -66,7 +64,8 @@ Current focus:
 - [X] Snapshot buffer
 - [X] Streaming diff engine
 - [X] Sync engine
-- [ ] Application configuration
+- [X] Application configuration
+- [ ] Tests
 - [ ] GUI interface
 - [ ] Benchmark module
 
