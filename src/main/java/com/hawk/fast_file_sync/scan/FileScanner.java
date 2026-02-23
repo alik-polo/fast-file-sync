@@ -1,6 +1,6 @@
 package com.hawk.fast_file_sync.scan;
 
-import com.hawk.fast_file_sync.cunsumer.ScanConsumer;
+import com.hawk.fast_file_sync.scan.cunsumer.ScanConsumer;
 import com.hawk.fast_file_sync.exception.OperationCancelledException;
 import com.hawk.fast_file_sync.exception.TraversalException;
 import com.hawk.fast_file_sync.model.CancellationToken;

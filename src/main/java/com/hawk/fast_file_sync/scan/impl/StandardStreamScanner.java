@@ -2,8 +2,7 @@ package com.hawk.fast_file_sync.scan.impl;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import com.hawk.fast_file_sync.cunsumer.ScanConsumer;
-import com.hawk.fast_file_sync.enums.FileStatus;
+import com.hawk.fast_file_sync.scan.cunsumer.ScanConsumer;
 import com.hawk.fast_file_sync.enums.FileType;
 import com.hawk.fast_file_sync.exception.OperationCancelledException;
 import com.hawk.fast_file_sync.exception.TraversalException;

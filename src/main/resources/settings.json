@@ -1,0 +1,4 @@
+{
+  "conflict-resolve" : "SAVE_BIGGEST",
+  "error-policy" : "FAST_FAIL"
+}

@@ -42,3 +42,5 @@ build/
 /src/main/java/com/hawk/fast_file_sync/buffer/AdvancedBuffer.java
 /src/main/java/com/hawk/fast_file_sync/sync/policy
 /src/main/java/com/hawk/fast_file_sync/cli
+/src/main/java/com/hawk/fast_file_sync/constants
+/src/main/java/com/hawk/fast_file_sync/reader

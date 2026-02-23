@@ -1,4 +1,4 @@
-package com.hawk.fast_file_sync.cunsumer;
+package com.hawk.fast_file_sync.scan.cunsumer;
 
 /**
  * Contract for handling metadata of files and directories discovered during a scan.
