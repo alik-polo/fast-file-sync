@@ -1,5 +1,6 @@
 package com.hawk.fast_file_sync.sync;
 
+import com.hawk.fast_file_sync.cunsumer.ReportConsumer;
 import com.hawk.fast_file_sync.exception.OperationCancelledException;
 import com.hawk.fast_file_sync.model.BufferSnapshot;
 import com.hawk.fast_file_sync.model.CancellationToken;
@@ -12,6 +13,7 @@ import java.nio.file.Path;
  * Engine for synchronizing files between multiple sources and a target.
  */
 public class SyncEngine {
+  private final ReportConsumer reportConsumer;
   private final ErrorHandlingPolicy errorPolicy;
 
   /**
@@ -19,7 +21,9 @@ public class SyncEngine {
    *
    * @param errorPolicy the policy used to handle I/O errors during synchronization
    */
-  public SyncEngine(ErrorHandlingPolicy errorPolicy) {
+  public SyncEngine(ReportConsumer reportConsumer,
+                    ErrorHandlingPolicy errorPolicy) {
+    this.reportConsumer = reportConsumer;
     this.errorPolicy = errorPolicy;
   }
 
@@ -53,7 +57,9 @@ public class SyncEngine {
             rightRoot,
             targetRoot
         );
+        reportConsumer.accept(snapshot, i);
       } catch (IOException e) {
+        reportConsumer.fail(snapshot, i);
         errorPolicy.handle(e);
       }
     }
