@@ -53,7 +53,8 @@ Detailed architecture notes will be available in `/docs`.
 Project is in early development stage.
 
 Current focus:
-- Tests
+- UI
+- Integration Tests (Sync Engine)
 - Error handle strategies (fast-fail, best-effort)
 
 ---
