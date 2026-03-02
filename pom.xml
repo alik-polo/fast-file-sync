@@ -64,6 +64,13 @@
             <version>3.27.7</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- FlatLaf style -->
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>3.2</version>
+        </dependency>
     </dependencies>
 
 </project>
