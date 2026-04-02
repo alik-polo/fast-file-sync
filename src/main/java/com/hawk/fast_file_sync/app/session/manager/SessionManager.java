@@ -11,17 +11,14 @@ public class SessionManager {
 
   private final AppConfig config;
   private final ReportConsumer reportConsumer;
-  private final ErrorHandlingPolicy policy;
 
   private AppSession currentSession;
   private SessionCreatedListener listener;
 
   public SessionManager(AppConfig config,
-                        ReportConsumer reportConsumer,
-                        ErrorHandlingPolicy policy) {
+                        ReportConsumer reportConsumer) {
     this.config = config;
     this.reportConsumer = reportConsumer;
-    this.policy = policy;
   }
 
   public void setSessionCreatedListener(SessionCreatedListener listener) {
@@ -31,7 +28,7 @@ public class SessionManager {
   public synchronized AppSession createSession() throws Exception {
     closeCurrentSession();
 
-    AppSession session = new AppSession(config, reportConsumer, policy);
+    AppSession session = new AppSession(config, reportConsumer);
     currentSession = session;
 
     if (listener != null) {

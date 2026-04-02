@@ -38,5 +38,4 @@ build/
 .DS_Store
 
 ### Dev ###
-/src/main/java/com/hawk/fast_file_sync/Main.java
 /src/main/java/com/hawk/fast_file_sync/buffer/AdvancedBuffer.java

@@ -38,7 +38,6 @@ public class AppSession implements AutoCloseable {
   private final AppConfig config;
   private final CancellationToken cancellationToken;
   private final ReportConsumer reportConsumer;
-  private final ErrorHandlingPolicy policy;
 
   private Path left;
   private Path right;
@@ -47,12 +46,10 @@ public class AppSession implements AutoCloseable {
   private State state = State.CREATED;
 
   public AppSession(AppConfig config,
-                    ReportConsumer reportConsumer,
-                    ErrorHandlingPolicy policy) {
+                    ReportConsumer reportConsumer) {
     this.id = UUID.randomUUID().toString();
     this.config = config;
     this.reportConsumer = reportConsumer;
-    this.policy = policy;
     this.cancellationToken = new SimpleCancellationToken();
   }
 
@@ -86,13 +83,28 @@ public class AppSession implements AutoCloseable {
     this.snapshot = diffStrategy.snapshot();
     this.state = State.SCANNED;
 
+    int same = 0;
+    int leftOnly = 0;
+    int rightOnly = 0;
+
     for (int i = 0; i < snapshot.getSnapshotSize(); i++) {
+      if (snapshot.getStatus(i) == FileStatus.SAME.getValue()) {
+        same++;
+      } else if (snapshot.getStatus(i) == FileStatus.LEFT_ONLY.getValue()) {
+        leftOnly++;
+      } else if (snapshot.getStatus(i) == FileStatus.RIGHT_ONLY.getValue()) {
+        rightOnly++;
+      }
+
       reportConsumer.info(FileStatus.fromValue(
           snapshot.getStatus(i)) + " | " + snapshot.getRelativePath(i)
       );
     }
 
     reportConsumer.info("Completed scanning. Total files: " + snapshot.getSnapshotSize());
+    reportConsumer.info("Same files: " + same);
+    reportConsumer.info("Left only files: " + leftOnly);
+    reportConsumer.info("Right only files: " + rightOnly);
   }
 
   public void runSync(Path left,
@@ -115,6 +127,7 @@ public class AppSession implements AutoCloseable {
         conflictHandler
     );
 
+    ErrorHandlingPolicy policy = config.errorPolicy();
     config.syncEngine(reportConsumer, policy).process(
         left,
         right,

@@ -14,6 +14,7 @@ import com.hawk.fast_file_sync.sync.SyncEngine;
 import com.hawk.fast_file_sync.sync.executor.SyncExecutor;
 import com.hawk.fast_file_sync.sync.executor.impl.SafeSyncExecutor;
 import com.hawk.fast_file_sync.sync.policy.ErrorHandlingPolicy;
+import com.hawk.fast_file_sync.sync.policy.impl.BestEffortPolicy;
 import com.hawk.fast_file_sync.sync.policy.impl.FastFailPolicy;
 
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ public class AppConfig {
 
   private final SyncExecutor safeExecutor = new SafeSyncExecutor();
   private final ErrorHandlingPolicy fastFailPolicy = new FastFailPolicy();
+  private final ErrorHandlingPolicy bestEffortPolicy = new BestEffortPolicy();
   private final HiddenFilter hiddenFilter = new HiddenFilter();
   private final SymlinkFilter symlinkFilter = new SymlinkFilter();
   private final InvalidNameFilter invalidNameFilter = new InvalidNameFilter();
@@ -54,6 +56,8 @@ public class AppConfig {
     String errPolicy = settings.get(Constants.ERROR_POLICY);
     if (Constants.FAST_FAIL.equals(errPolicy)) {
       return fastFailPolicy;
+    } else if (Constants.BEST_EFFORT.equals(errPolicy)) {
+      return bestEffortPolicy;
     }
     throw new UnreadableUserSettingsException("Unknown value: " + errPolicy);
   }

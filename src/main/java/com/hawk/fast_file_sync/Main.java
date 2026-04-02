@@ -1,4 +1,4 @@
-package com.hawk.fast_file_sync.ui;
+package com.hawk.fast_file_sync;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.hawk.fast_file_sync.app.config.AppConfig;
@@ -6,6 +6,7 @@ import com.hawk.fast_file_sync.app.session.manager.SessionManager;
 import com.hawk.fast_file_sync.cunsumer.impl.UITextAreaReportConsumer;
 import com.hawk.fast_file_sync.reader.SettingsFileReader;
 import com.hawk.fast_file_sync.sync.policy.impl.FastFailPolicy;
+import com.hawk.fast_file_sync.ui.MainFrame;
 import com.hawk.fast_file_sync.ui.style.UIConstants;
 import com.hawk.fast_file_sync.ui.theme.manager.ThemeManager;
 import com.hawk.fast_file_sync.ui.theme.mod.StormyMorningDarkTheme;
@@ -13,7 +14,7 @@ import com.hawk.fast_file_sync.ui.theme.mod.StormyMorningDarkTheme;
 import javax.swing.*;
 import java.util.Map;
 
-public class App {
+public class Main {
   public static void main(String[] args) {
     printMemory("START");
 
@@ -22,11 +23,11 @@ public class App {
     AppConfig config = AppConfig.getInstance();
     config.configure(settings);
 
-    JTextArea logArea = new JTextArea();
-    UITextAreaReportConsumer uiConsumer = new UITextAreaReportConsumer(logArea);
+    JTextPane logPlane = new JTextPane();
+    UITextAreaReportConsumer uiConsumer = new UITextAreaReportConsumer(logPlane);
 
     SessionManager sessionManager =
-        new SessionManager(config, uiConsumer, new FastFailPolicy());
+        new SessionManager(config, uiConsumer);
 
     ThemeManager.setTheme(new StormyMorningDarkTheme());
 
@@ -36,7 +37,7 @@ public class App {
     UIManager.put("Component.arc", UIConstants.BORDER_RADIUS);
 
     SwingUtilities.invokeLater(() ->
-        new MainFrame(sessionManager, uiConsumer, logArea).setVisible(true)
+        new MainFrame(sessionManager, uiConsumer, logPlane).setVisible(true)
     );
 
     printMemory("STOP");

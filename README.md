@@ -54,8 +54,8 @@ Project is in early development stage.
 
 Current focus:
 - UI
-- Integration Tests (Sync Engine)
-- Error handle strategies (fast-fail, best-effort)
+- Benchmark module
+- Local tests
 
 ---
 
@@ -66,8 +66,8 @@ Current focus:
 - [X] Streaming diff engine
 - [X] Sync engine
 - [X] Application configuration
-- [ ] Tests
-- [ ] GUI interface
+- [X] Tests
+- [X] GUI interface
 - [ ] Benchmark module
 
 ---

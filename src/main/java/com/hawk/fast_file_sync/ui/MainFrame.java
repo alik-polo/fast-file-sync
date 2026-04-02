@@ -18,16 +18,16 @@ public class MainFrame extends JFrame {
 
   private final CardLayout cardLayout = new CardLayout();
   private final JPanel contentPanel = new GradientPanel(cardLayout);
-  private final JTextArea logArea;
+  private final JTextPane logPane;
   private final SessionManager sessionManager;
   private final ReportConsumer reportConsumer;
 
   public MainFrame(SessionManager sessionManager,
                    ReportConsumer reportConsumer,
-                   JTextArea logArea) {
+                   JTextPane logPane) {
     this.sessionManager = sessionManager;
     this.reportConsumer = reportConsumer;
-    this.logArea = logArea;
+    this.logPane = logPane;
     init();
   }
 
@@ -52,20 +52,15 @@ public class MainFrame extends JFrame {
   }
 
   private Component createContentWithLogs() {
-    logArea.setEditable(false);
-    logArea.setFont(new Font("JetBrains Mono", Font.PLAIN, 13));
+    logPane.setEditable(false);
+    logPane.setFont(new Font("JetBrains Mono", Font.PLAIN, 13));
 
-    logArea.setBackground(new Color(30, 30, 30));
-    logArea.setForeground(new Color(220, 220, 220));
-    logArea.setCaretColor(Color.WHITE);
+    logPane.setBackground(new Color(30, 30, 30));
+    logPane.setCaretColor(Color.WHITE);
 
-    logArea.setLineWrap(true);
-    logArea.setWrapStyleWord(true);
-    logArea.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
-
-    JScrollPane logScroll = new JScrollPane(logArea);
+    JScrollPane logScroll = new JScrollPane(logPane);
     logScroll.setBorder(BorderFactory.createEmptyBorder());
-    logScroll.getViewport().setBackground(logArea.getBackground());
+    logScroll.getViewport().setBackground(logPane.getBackground());
 
     JScrollPane contentScroll = new JScrollPane(createContent());
     contentScroll.setBorder(BorderFactory.createEmptyBorder());
