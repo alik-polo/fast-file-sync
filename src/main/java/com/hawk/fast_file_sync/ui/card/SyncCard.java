@@ -25,61 +25,154 @@ public class SyncCard extends BaseCard {
   public SyncCard(SessionManager sessionManager) {
     this.sessionManager = sessionManager;
 
-    JLabel title = new JLabel("Directory Sync");
-    title.setFont(UIConstants.TITLE_FONT);
-    title.setForeground(ThemeManager.theme().textPrimary());
-    title.setAlignmentX(Component.LEFT_ALIGNMENT);
+    setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-    add(title);
+    add(createHeader());
     add(Box.createVerticalStrut(UIConstants.SPACING_L));
 
-    JLabel info = new JLabel("Using results from last scan");
-    info.setFont(UIConstants.BODY_FONT);
-    info.setForeground(ThemeManager.theme().textMuted());
-    info.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-    add(info);
+    add(createInfo());
     add(Box.createVerticalStrut(UIConstants.SPACING_M));
 
-    add(createSyncOptionsPanel());
+    add(createSection("Sync Mode", createSyncOptionsPanel()));
     add(Box.createVerticalStrut(UIConstants.SPACING_M));
 
-    add(createConflictOptionsPanel());
-    add(Box.createVerticalStrut(UIConstants.SPACING_M));
+    add(createSection("Conflict Handling", createConflictOptionsPanel()));
+    add(Box.createVerticalStrut(UIConstants.SPACING_L));
 
     JButton start = UIComponents.primaryButton("Start Sync");
     JButton stop = UIComponents.primaryButton("Stop Sync");
-
-    start.setAlignmentX(Component.LEFT_ALIGNMENT);
-    stop.setAlignmentX(Component.LEFT_ALIGNMENT);
     stop.setEnabled(false);
+
+    JPanel actions = new JPanel();
+    actions.setOpaque(false);
+    actions.setLayout(new BoxLayout(actions, BoxLayout.X_AXIS));
+
+    actions.add(start);
+    actions.add(Box.createHorizontalStrut(UIConstants.SPACING_S));
+    actions.add(stop);
 
     JProgressBar bar = createStyledProgressBar();
     bar.setVisible(false);
 
-    start.addActionListener(e ->
-        startSync(start, stop, bar)
-    );
+    start.addActionListener(e -> startSync(start, stop, bar));
+    stop.addActionListener(e -> stopSync(start, stop, bar));
 
-    stop.addActionListener(e ->
-        stopSync(start, stop, bar)
-    );
-
-    add(start);
-    add(Box.createVerticalStrut(UIConstants.SPACING_S));
-    add(stop);
+    add(actions);
     add(Box.createVerticalStrut(UIConstants.SPACING_M));
     add(bar);
   }
 
-  private void startSync(
-      JButton start,
-      JButton stop,
-      JProgressBar bar) {
+  private JComponent createHeader() {
+    JLabel title = new JLabel("Directory Sync");
+    title.setFont(UIConstants.TITLE_FONT);
+    title.setForeground(ThemeManager.theme().textPrimary());
+    title.setAlignmentX(Component.LEFT_ALIGNMENT);
+    return title;
+  }
 
-    if (worker != null && !worker.isDone()) {
-      return;
-    }
+  private JComponent createInfo() {
+    JLabel info = new JLabel("Using results from last scan");
+    info.setFont(UIConstants.BODY_FONT);
+    info.setForeground(ThemeManager.theme().textMuted());
+    info.setAlignmentX(Component.LEFT_ALIGNMENT);
+    return info;
+  }
+
+  private JPanel createSection(String title, JComponent content) {
+
+    JPanel panel = column();
+
+    JLabel label = new JLabel(title);
+    label.setFont(UIConstants.BODY_FONT);
+    label.setForeground(ThemeManager.theme().textSecondary());
+
+    panel.add(label);
+    panel.add(Box.createVerticalStrut(8));
+    panel.add(content);
+
+    return panel;
+  }
+
+  private JPanel createSyncOptionsPanel() {
+
+    JComboBox<SyncOption> combo = new JComboBox<>(SyncOption.values());
+    combo.setSelectedItem(syncOption);
+    styleCombo(combo);
+
+    combo.addActionListener(e ->
+        syncOption = (SyncOption) combo.getSelectedItem()
+    );
+
+    JPanel panel = column();
+    panel.add(createRow("Mode", combo));
+
+    return panel;
+  }
+
+  private JPanel createConflictOptionsPanel() {
+
+    JComboBox<ConflictOption> combo = new JComboBox<>(ConflictOption.values());
+    combo.setSelectedItem(conflictOption);
+    styleCombo(combo);
+
+    combo.addActionListener(e ->
+        conflictOption = (ConflictOption) combo.getSelectedItem()
+    );
+
+    JPanel panel = column();
+    panel.add(createRow("Strategy", combo));
+
+    return panel;
+  }
+
+  private JPanel createRow(String labelText, JComponent component) {
+
+    JPanel row = new JPanel(new BorderLayout());
+    row.setOpaque(false);
+    row.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JLabel label = new JLabel(labelText);
+    label.setFont(UIConstants.BODY_FONT);
+    label.setForeground(ThemeManager.theme().textPrimary());
+
+    row.add(label, BorderLayout.WEST);
+    row.add(component, BorderLayout.EAST);
+
+    row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+
+    return row;
+  }
+
+  private JPanel column() {
+    JPanel panel = new JPanel();
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    panel.setOpaque(false);
+    panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+    return panel;
+  }
+
+  private void styleCombo(JComboBox<?> combo) {
+    combo.setFocusable(false);
+    combo.setBackground(ThemeManager.theme().inputBackground());
+    combo.setForeground(ThemeManager.theme().textPrimary());
+    combo.setBorder(BorderFactory.createLineBorder(
+        ThemeManager.theme().inputBorder(), 1));
+
+    combo.setPreferredSize(new Dimension(180, 28));
+  }
+
+  private JProgressBar createStyledProgressBar() {
+    JProgressBar bar = new JProgressBar();
+    bar.setStringPainted(true);
+    bar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
+    bar.setBackground(ThemeManager.theme().secondarySurface());
+    bar.setForeground(ThemeManager.theme().accent());
+    return bar;
+  }
+
+  private void startSync(JButton start, JButton stop, JProgressBar bar) {
+
+    if (worker != null && !worker.isDone()) return;
 
     try {
       AppSession session = sessionManager.getCurrentSession()
@@ -105,8 +198,7 @@ public class SyncCard extends BaseCard {
                 syncOption,
                 conflictOption
             );
-          } catch (OperationCancelledException e) {
-            System.out.println("Sync cancelled");
+          } catch (OperationCancelledException ignored) {
           } catch (Exception e) {
             SwingUtilities.invokeLater(() ->
                 JOptionPane.showMessageDialog(
@@ -124,12 +216,7 @@ public class SyncCard extends BaseCard {
         protected void done() {
           start.setEnabled(true);
           stop.setEnabled(false);
-
-          if (isCancelled()) {
-            bar.setValue(0);
-          } else {
-            bar.setValue(100);
-          }
+          bar.setValue(isCancelled() ? 0 : 100);
         }
       };
 
@@ -159,20 +246,14 @@ public class SyncCard extends BaseCard {
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
         int result = chooser.showOpenDialog(this);
-
-        if (result != JFileChooser.APPROVE_OPTION) {
-          yield null;
-        }
+        if (result != JFileChooser.APPROVE_OPTION) yield null;
 
         yield chooser.getSelectedFile().toPath();
       }
     };
   }
 
-  private void stopSync(
-      JButton start,
-      JButton stop,
-      JProgressBar bar) {
+  private void stopSync(JButton start, JButton stop, JProgressBar bar) {
 
     if (worker != null && !worker.isDone()) {
       sessionManager.cancelCurrentSession();
@@ -182,75 +263,5 @@ public class SyncCard extends BaseCard {
     start.setEnabled(true);
     stop.setEnabled(false);
     bar.setValue(0);
-  }
-
-  private JPanel createSyncOptionsPanel() {
-
-    JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-    panel.setOpaque(false);
-    panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-    JLabel label = new JLabel("Sync Mode: ");
-    label.setFont(UIConstants.BODY_FONT);
-    label.setForeground(ThemeManager.theme().textSecondary());
-
-    JComboBox<SyncOption> combo = new JComboBox<>(SyncOption.values());
-    combo.setSelectedItem(syncOption);
-    styleCombo(combo);
-
-    combo.addActionListener(e ->
-        syncOption = (SyncOption) combo.getSelectedItem()
-    );
-
-    panel.add(label);
-    panel.add(Box.createHorizontalStrut(UIConstants.SPACING_S));
-    panel.add(combo);
-
-    return panel;
-  }
-
-  private JPanel createConflictOptionsPanel() {
-
-    JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-    panel.setOpaque(false);
-    panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-    JLabel label = new JLabel("Conflict Mode: ");
-    label.setFont(UIConstants.BODY_FONT);
-    label.setForeground(ThemeManager.theme().textSecondary());
-
-    JComboBox<ConflictOption> combo = new JComboBox<>(ConflictOption.values());
-    combo.setSelectedItem(conflictOption);
-    styleCombo(combo);
-
-    combo.addActionListener(e ->
-        conflictOption = (ConflictOption) combo.getSelectedItem()
-    );
-
-    panel.add(label);
-    panel.add(Box.createHorizontalStrut(UIConstants.SPACING_S));
-    panel.add(combo);
-
-    return panel;
-  }
-
-  private void styleCombo(JComboBox<?> combo) {
-    combo.setFocusable(false);
-    combo.setBackground(ThemeManager.theme().inputBackground());
-    combo.setForeground(ThemeManager.theme().textPrimary());
-    combo.setBorder(BorderFactory.createLineBorder(
-        ThemeManager.theme().inputBorder(), 1));
-  }
-
-  private JProgressBar createStyledProgressBar() {
-
-    JProgressBar bar = new JProgressBar();
-    bar.setStringPainted(true);
-    bar.setAlignmentX(Component.LEFT_ALIGNMENT);
-    bar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
-    bar.setBackground(ThemeManager.theme().secondarySurface());
-    bar.setForeground(ThemeManager.theme().accent());
-
-    return bar;
   }
 }

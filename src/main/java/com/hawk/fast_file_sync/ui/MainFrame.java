@@ -61,16 +61,19 @@ public class MainFrame extends JFrame {
 
     logArea.setLineWrap(true);
     logArea.setWrapStyleWord(true);
-
     logArea.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
 
     JScrollPane logScroll = new JScrollPane(logArea);
     logScroll.setBorder(BorderFactory.createEmptyBorder());
     logScroll.getViewport().setBackground(logArea.getBackground());
 
+    JScrollPane contentScroll = new JScrollPane(createContent());
+    contentScroll.setBorder(BorderFactory.createEmptyBorder());
+    contentScroll.getVerticalScrollBar().setUnitIncrement(16);
+
     JSplitPane splitPane = new JSplitPane(
         JSplitPane.VERTICAL_SPLIT,
-        createContent(),
+        contentScroll,
         logScroll
     );
 

@@ -25,7 +25,6 @@ public class HiddenFilter implements ScanFilter {
     try {
       return !Files.isHidden(path);
     } catch (IOException e) {
-      // log
       return false;
     }
   }

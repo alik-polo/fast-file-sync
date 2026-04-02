@@ -12,13 +12,13 @@ public class TitleBar extends JPanel {
   public TitleBar() {
     setLayout(new BorderLayout());
     setBackground(ThemeManager.theme().sidebar());
-    setPreferredSize(new Dimension(0, 55));
+    setPreferredSize(new Dimension(0, 60));
+    setBorder(new EmptyBorder(0, 20, 0, 20));
 
-    JLabel title = new JLabel("Fast File Sync", SwingConstants.CENTER);
+    JLabel title = new JLabel("Fast File Sync");
     title.setFont(UIConstants.TITLE_FONT);
     title.setForeground(ThemeManager.theme().textPrimary());
-    title.setBorder(new EmptyBorder(5, 10, 5, 10));
 
-    add(title, BorderLayout.CENTER);
+    add(title, BorderLayout.WEST);
   }
 }

@@ -12,11 +12,7 @@ import com.hawk.fast_file_sync.ui.theme.manager.ThemeManager;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.dnd.*;
-import java.io.File;
 import java.nio.file.Path;
-import java.util.List;
 
 public class ScanCard extends BaseCard {
 
@@ -30,12 +26,9 @@ public class ScanCard extends BaseCard {
     this.sessionManager = sessionManager;
     this.reportConsumer = reportConsumer;
 
-    JLabel title = new JLabel("Directory Scan");
-    title.setFont(UIConstants.TITLE_FONT);
-    title.setForeground(ThemeManager.theme().textPrimary());
-    title.setAlignmentX(Component.LEFT_ALIGNMENT);
+    setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-    add(title);
+    add(createHeader());
     add(Box.createVerticalStrut(UIConstants.SPACING_L));
 
     PathField leftField = new PathField("Select left directory...");
@@ -47,31 +40,37 @@ public class ScanCard extends BaseCard {
     add(Box.createVerticalStrut(UIConstants.SPACING_M));
 
     add(createStrategyPanel());
-    add(Box.createVerticalStrut(UIConstants.SPACING_M));
+    add(Box.createVerticalStrut(UIConstants.SPACING_L));
 
     JButton start = UIComponents.primaryButton("Start Scan");
-    start.setAlignmentX(Component.LEFT_ALIGNMENT);
-
     JButton stop = UIComponents.primaryButton("Stop Scan");
-    stop.setAlignmentX(Component.LEFT_ALIGNMENT);
     stop.setEnabled(false);
+
+    JPanel actions = new JPanel();
+    actions.setOpaque(false);
+    actions.setLayout(new BoxLayout(actions, BoxLayout.X_AXIS));
+
+    actions.add(start);
+    actions.add(Box.createHorizontalStrut(UIConstants.SPACING_S));
+    actions.add(stop);
 
     JProgressBar bar = createStyledProgressBar();
     bar.setVisible(false);
 
-    start.addActionListener(e ->
-        startScan(leftField, rightField, start, stop, bar)
-    );
+    start.addActionListener(e -> startScan(leftField, rightField, start, stop, bar));
+    stop.addActionListener(e -> stopScan(start, stop, bar));
 
-    stop.addActionListener(e ->
-        stopScan(start, stop, bar)
-    );
-
-    add(start);
-    add(Box.createVerticalStrut(UIConstants.SPACING_S));
-    add(stop);
+    add(actions);
     add(Box.createVerticalStrut(UIConstants.SPACING_M));
     add(bar);
+  }
+
+  private JComponent createHeader() {
+    JLabel title = new JLabel("Directory Scan");
+    title.setFont(UIConstants.TITLE_FONT);
+    title.setForeground(ThemeManager.theme().textPrimary());
+    title.setAlignmentX(Component.LEFT_ALIGNMENT);
+    return title;
   }
 
   private void startScan(
@@ -88,19 +87,14 @@ public class ScanCard extends BaseCard {
     if (leftField.getText().isEmpty()) {
       leftField.setErrorBorder();
       valid = false;
-    } else {
-      leftField.resetBorder();
-    }
+    } else leftField.resetBorder();
 
     if (rightField.getText().isEmpty()) {
       rightField.setErrorBorder();
       valid = false;
-    } else {
-      rightField.resetBorder();
-    }
+    } else rightField.resetBorder();
 
-    if (!valid)
-      return;
+    if (!valid) return;
 
     start.setEnabled(false);
     stop.setEnabled(true);
@@ -110,14 +104,7 @@ public class ScanCard extends BaseCard {
     try {
       AppSession session = sessionManager.createSession();
 
-/*      sessionManager.getCurrentSession().ifPresent(s -> {
-        s.reportConsumer().setProgressListener(progress -> {
-          SwingUtilities.invokeLater(() -> bar.setValue(progress));
-        });
-      });*/
-
       worker = new SwingWorker<>() {
-
         @Override
         protected Void doInBackground() throws Exception {
 
@@ -125,10 +112,13 @@ public class ScanCard extends BaseCard {
           Path right = Path.of(rightField.getText());
 
           try {
-            session.runScan(left, right, scanStrategy.equals("FAST") ? DiffOption.FAST : DiffOption.DEEP, reportConsumer);
-          } catch (OperationCancelledException e) {
-            System.out.println("Scan cancelled");
-          }
+            session.runScan(
+                left,
+                right,
+                scanStrategy.equals("FAST") ? DiffOption.FAST : DiffOption.DEEP,
+                reportConsumer
+            );
+          } catch (OperationCancelledException ignored) {}
 
           return null;
         }
@@ -137,12 +127,7 @@ public class ScanCard extends BaseCard {
         protected void done() {
           start.setEnabled(true);
           stop.setEnabled(false);
-
-          if (isCancelled()) {
-            bar.setValue(0);
-          } else {
-            bar.setValue(100);
-          }
+          bar.setValue(isCancelled() ? 0 : 100);
         }
       };
 
@@ -161,11 +146,7 @@ public class ScanCard extends BaseCard {
     }
   }
 
-  private void stopScan(
-      JButton start,
-      JButton stop,
-      JProgressBar bar) {
-
+  private void stopScan(JButton start, JButton stop, JProgressBar bar) {
     if (worker != null && !worker.isDone()) {
       sessionManager.cancelCurrentSession();
       worker.cancel(true);
@@ -180,9 +161,8 @@ public class ScanCard extends BaseCard {
 
     JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
     panel.setOpaque(false);
-    panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-    JLabel label = new JLabel("Scan Strategy: ");
+    JLabel label = new JLabel("Scan Strategy:");
     label.setForeground(ThemeManager.theme().textSecondary());
     label.setFont(UIConstants.BODY_FONT);
 
@@ -205,15 +185,11 @@ public class ScanCard extends BaseCard {
   }
 
   private JProgressBar createStyledProgressBar() {
-
     JProgressBar bar = new JProgressBar();
     bar.setStringPainted(true);
-    bar.setAlignmentX(Component.LEFT_ALIGNMENT);
-    bar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+    bar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
     bar.setBackground(ThemeManager.theme().secondarySurface());
     bar.setForeground(ThemeManager.theme().accent());
-
     return bar;
   }
-
 }

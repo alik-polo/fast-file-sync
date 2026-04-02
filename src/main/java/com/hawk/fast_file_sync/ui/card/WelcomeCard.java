@@ -9,34 +9,114 @@ import java.awt.*;
 public class WelcomeCard extends BaseCard {
 
   public WelcomeCard() {
+
+    setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     setAlignmentX(Component.LEFT_ALIGNMENT);
 
-    JLabel title = new JLabel("Welcome to Fast File Sync");
-    title.setFont(UIConstants.TITLE_FONT);
-    title.setForeground(ThemeManager.theme().textPrimary());
-    title.setAlignmentX(Component.LEFT_ALIGNMENT);
-    add(title);
+    add(createHeader());
     add(Box.createVerticalStrut(UIConstants.SPACING_L));
 
-    JTextArea description = new JTextArea(
-        "Fast File Sync is a tool for quickly comparing and synchronizing directories on your computer.\n\n" +
-            "You can select the left and right folders, choose a scan strategy (FAST / DEEP), and start the process.\n" +
-            "The program will show the differences and changes that can be synchronized between folders.\n\n" +
-            "The settings panel allows you to change the error policy, enable or disable filters for hidden files, symbolic links, invalid file names, and broken files.\n\n" +
-            "Note: This is a TEST version of the program, it is not the final release and may contain bugs."
-    );
+    add(createSection(
+        "What is this?",
+        "Fast File Sync helps you compare and synchronize directories quickly and efficiently."
+    ));
 
-    description.setFont(UIConstants.BODY_FONT);
-    description.setForeground(ThemeManager.theme().textSecondary());
-    description.setOpaque(false);
-    description.setEditable(false);
-    description.setLineWrap(true);
-    description.setWrapStyleWord(true);
-    description.setAlignmentX(Component.LEFT_ALIGNMENT);
-    description.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+    add(Box.createVerticalStrut(UIConstants.SPACING_M));
 
-    add(description);
+    add(createSection(
+        "How it works",
+        "1. Select left and right folders\n" +
+            "2. Choose scan strategy (FAST / DEEP)\n" +
+            "3. Review differences\n" +
+            "4. Run synchronization"
+    ));
+
+    add(Box.createVerticalStrut(UIConstants.SPACING_M));
+
+    add(createSection(
+        "Features",
+        "• Fast and deep scanning\n" +
+            "• Smart synchronization modes\n" +
+            "• Configurable filters\n" +
+            "• Error handling strategies"
+    ));
+
+    add(Box.createVerticalStrut(UIConstants.SPACING_L));
+
+    add(createNote());
 
     add(Box.createVerticalGlue());
+  }
+
+  private JComponent createHeader() {
+
+    JPanel panel = new JPanel();
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    panel.setOpaque(false);
+    panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JLabel title = new JLabel("Fast File Sync");
+    title.setFont(new Font(UIConstants.TITLE_FONT.getName(), Font.BOLD, 26));
+    title.setForeground(ThemeManager.theme().textPrimary());
+
+    JLabel subtitle = new JLabel("Fast & reliable directory synchronization");
+    subtitle.setFont(UIConstants.BODY_FONT);
+    subtitle.setForeground(ThemeManager.theme().textMuted());
+
+    panel.add(title);
+    panel.add(Box.createVerticalStrut(6));
+    panel.add(subtitle);
+
+    return panel;
+  }
+
+  private JComponent createSection(String title, String content) {
+
+    JPanel panel = new JPanel();
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    panel.setOpaque(false);
+    panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JLabel sectionTitle = new JLabel(title);
+    sectionTitle.setFont(UIConstants.BODY_FONT);
+    sectionTitle.setForeground(ThemeManager.theme().textPrimary());
+
+    JTextArea text = new JTextArea(content);
+    text.setFont(UIConstants.BODY_FONT);
+    text.setForeground(ThemeManager.theme().textSecondary());
+    text.setOpaque(false);
+    text.setEditable(false);
+    text.setLineWrap(true);
+    text.setWrapStyleWord(true);
+    text.setBorder(BorderFactory.createEmptyBorder());
+
+    panel.add(sectionTitle);
+    panel.add(Box.createVerticalStrut(6));
+    panel.add(text);
+
+    return panel;
+  }
+
+  private JComponent createNote() {
+
+    JPanel panel = new JPanel();
+    panel.setLayout(new BorderLayout());
+    panel.setOpaque(false);
+    panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    panel.setBorder(BorderFactory.createEmptyBorder(
+        UIConstants.SPACING_S,
+        UIConstants.SPACING_S,
+        UIConstants.SPACING_S,
+        UIConstants.SPACING_S
+    ));
+
+    JLabel note = new JLabel("⚠ This is a test version and may contain bugs.");
+    note.setFont(UIConstants.BODY_FONT);
+    note.setForeground(ThemeManager.theme().accent());
+
+    panel.add(note, BorderLayout.WEST);
+
+    return panel;
   }
 }

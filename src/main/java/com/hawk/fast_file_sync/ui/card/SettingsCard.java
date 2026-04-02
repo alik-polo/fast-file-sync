@@ -27,35 +27,131 @@ public class SettingsCard extends BaseCard {
 
   public SettingsCard() {
 
-    JLabel title = new JLabel("Settings");
-    title.setFont(UIConstants.TITLE_FONT);
-    title.setForeground(ThemeManager.theme().textPrimary());
-    title.setAlignmentX(Component.LEFT_ALIGNMENT);
+    setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-    add(title);
+    add(createHeader());
     add(Box.createVerticalStrut(UIConstants.SPACING_L));
 
     initFields();
     loadSettings();
 
-    add(createRow("Error Policy", errorPolicyBox));
-    add(createRow("Executor", executorBox));
-
-    add(Box.createVerticalStrut(UIConstants.SPACING_M));
-
-    add(createRow("Hidden Files", hiddenFilter));
-    add(createRow("Symlinks", symlinkFilter));
-    add(createRow("Invalid Names", invalidNameFilter));
-    add(createRow("Broken Files", brokenFilter));
-
+    add(createSection("Execution", createExecutionSettings()));
     add(Box.createVerticalStrut(UIConstants.SPACING_L));
 
-    JButton save = UIComponents.primaryButton("Save");
-    save.setAlignmentX(Component.LEFT_ALIGNMENT);
+    add(createSection("Filters", createFilterSettings()));
+    add(Box.createVerticalStrut(UIConstants.SPACING_L));
 
+    JButton save = UIComponents.primaryButton("Save Settings");
     save.addActionListener(e -> saveSettings());
 
     add(save);
+  }
+
+  private JComponent createHeader() {
+    JLabel title = new JLabel("Settings");
+    title.setFont(UIConstants.TITLE_FONT);
+    title.setForeground(ThemeManager.theme().textPrimary());
+    title.setAlignmentX(Component.LEFT_ALIGNMENT);
+    return title;
+  }
+
+  private JPanel createSection(String title, JComponent content) {
+
+    JPanel panel = new JPanel();
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    panel.setOpaque(false);
+    panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JLabel label = new JLabel(title);
+    label.setFont(UIConstants.BODY_FONT);
+    label.setForeground(ThemeManager.theme().textSecondary());
+
+    panel.add(label);
+    panel.add(Box.createVerticalStrut(10));
+    panel.add(content);
+
+    return panel;
+  }
+
+  private JPanel createExecutionSettings() {
+
+    JPanel panel = column();
+
+    panel.add(createRow(
+        "Error Policy",
+        "Stop on first error or continue processing.",
+        errorPolicyBox
+    ));
+
+    panel.add(Box.createVerticalStrut(UIConstants.SPACING_S));
+
+    panel.add(createRow(
+        "Executor",
+        "Execution strategy used internally.",
+        executorBox
+    ));
+
+    return panel;
+  }
+
+  private JPanel createFilterSettings() {
+
+    JPanel panel = column();
+
+    panel.add(createRow("Hidden Files", "Skip hidden files", hiddenFilter));
+    panel.add(Box.createVerticalStrut(UIConstants.SPACING_S));
+
+    panel.add(createRow("Symlinks", "Skip symbolic links", symlinkFilter));
+    addSpacer(panel);
+
+    panel.add(createRow("Invalid Names", "Skip invalid file names", invalidNameFilter));
+    addSpacer(panel);
+
+    panel.add(createRow("Broken Files", "Skip corrupted files", brokenFilter));
+
+    return panel;
+  }
+
+  private JPanel createRow(String title, String description, JComponent component) {
+
+    JPanel row = new JPanel(new BorderLayout());
+    row.setOpaque(false);
+    row.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JPanel text = new JPanel();
+    text.setLayout(new BoxLayout(text, BoxLayout.Y_AXIS));
+    text.setOpaque(false);
+
+    JLabel label = new JLabel(title);
+    label.setFont(UIConstants.BODY_FONT);
+    label.setForeground(ThemeManager.theme().textPrimary());
+
+    JLabel desc = new JLabel(description);
+    desc.setFont(new Font("Dialog", Font.PLAIN, 12));
+    desc.setForeground(ThemeManager.theme().textMuted());
+
+    text.add(label);
+    text.add(Box.createVerticalStrut(2));
+    text.add(desc);
+
+    row.add(text, BorderLayout.WEST);
+    row.add(component, BorderLayout.EAST);
+
+    row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+
+    return row;
+  }
+
+  private JPanel column() {
+    JPanel panel = new JPanel();
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    panel.setOpaque(false);
+    panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+    return panel;
+  }
+
+  private void addSpacer(JPanel panel) {
+    panel.add(Box.createVerticalStrut(UIConstants.SPACING_S));
   }
 
   private void initFields() {
@@ -84,23 +180,6 @@ public class SettingsCard extends BaseCard {
     box.setForeground(ThemeManager.theme().textPrimary());
     box.setBorder(BorderFactory.createLineBorder(
         ThemeManager.theme().inputBorder(), 1));
-  }
-
-  private JPanel createRow(String labelText, JComponent component) {
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setOpaque(false);
-    panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-    JLabel label = new JLabel(labelText);
-    label.setFont(UIConstants.BODY_FONT);
-    label.setForeground(ThemeManager.theme().textSecondary());
-
-    panel.add(label, BorderLayout.WEST);
-    panel.add(component, BorderLayout.EAST);
-
-    panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-
-    return panel;
   }
 
   private void loadSettings() {
@@ -133,15 +212,21 @@ public class SettingsCard extends BaseCard {
 
   private void saveSettings() {
     try {
-      Map<String, String> settings = getStringStringMap();
+      Map<String, String> settings = getSettingsMap();
 
       mapper.writerWithDefaultPrettyPrinter()
           .writeValue(new File(SETTINGS_PATH), settings);
 
-      JOptionPane.showMessageDialog(this,
-          "Settings saved",
-          "Success",
-          JOptionPane.INFORMATION_MESSAGE);
+      int result = JOptionPane.showConfirmDialog(
+          this,
+          "Settings saved. Restart application now?",
+          "Restart Required",
+          JOptionPane.YES_NO_OPTION
+      );
+
+      if (result == JOptionPane.YES_OPTION) {
+        restartApplication();
+      }
 
     } catch (Exception e) {
       JOptionPane.showMessageDialog(this,
@@ -151,7 +236,7 @@ public class SettingsCard extends BaseCard {
     }
   }
 
-  private Map<String, String> getStringStringMap() {
+  private Map<String, String> getSettingsMap() {
     Map<String, String> settings = new HashMap<>();
 
     settings.put("error-policy", (String) errorPolicyBox.getSelectedItem());
@@ -161,6 +246,29 @@ public class SettingsCard extends BaseCard {
     settings.put("symlink-filter", toBinary((String) symlinkFilter.getSelectedItem()));
     settings.put("invalid-name-filter", toBinary((String) invalidNameFilter.getSelectedItem()));
     settings.put("broken-filter", toBinary((String) brokenFilter.getSelectedItem()));
+
     return settings;
+  }
+
+  private void restartApplication() {
+    try {
+      String java = System.getProperty("java.home") + "/bin/java";
+
+      String jarPath = new File(
+          SettingsCard.class.getProtectionDomain()
+              .getCodeSource()
+              .getLocation()
+              .toURI()
+      ).getPath();
+
+      new ProcessBuilder(java, "-jar", jarPath).start();
+      System.exit(0);
+
+    } catch (Exception e) {
+      JOptionPane.showMessageDialog(this,
+          "Failed to restart application: " + e.getMessage(),
+          "Error",
+          JOptionPane.ERROR_MESSAGE);
+    }
   }
 }

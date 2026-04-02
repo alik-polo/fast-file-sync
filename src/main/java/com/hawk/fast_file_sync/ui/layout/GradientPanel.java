@@ -9,20 +9,28 @@ public class GradientPanel extends JPanel {
 
   public GradientPanel(LayoutManager layout) {
     super(layout);
+    setOpaque(false);
   }
 
   @Override
   protected void paintComponent(Graphics g) {
-    super.paintComponent(g);
 
     Graphics2D g2 = (Graphics2D) g.create();
+    g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
+    Color top = ThemeManager.theme().background();
+    Color bottom = ThemeManager.theme().surface();
+
     GradientPaint gp = new GradientPaint(
-        0, 0, ThemeManager.theme().background(),
-        0, getHeight(), ThemeManager.theme().surface()
+        0, 0, top,
+        0, getHeight(), bottom
     );
 
     g2.setPaint(gp);
     g2.fillRect(0, 0, getWidth(), getHeight());
+
     g2.dispose();
+
+    super.paintComponent(g);
   }
 }

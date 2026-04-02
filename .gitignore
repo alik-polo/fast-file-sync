@@ -40,4 +40,3 @@ build/
 ### Dev ###
 /src/main/java/com/hawk/fast_file_sync/Main.java
 /src/main/java/com/hawk/fast_file_sync/buffer/AdvancedBuffer.java
-/src/test/java/naming_pattern.txt

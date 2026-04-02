@@ -15,6 +15,8 @@ import java.util.Map;
 
 public class App {
   public static void main(String[] args) {
+    printMemory("START");
+
     Map<String, String> settings = SettingsFileReader.readSettings();
 
     AppConfig config = AppConfig.getInstance();
@@ -34,7 +36,21 @@ public class App {
     UIManager.put("Component.arc", UIConstants.BORDER_RADIUS);
 
     SwingUtilities.invokeLater(() ->
-        new MainFrame(sessionManager, uiConsumer, logArea)
+        new MainFrame(sessionManager, uiConsumer, logArea).setVisible(true)
     );
+
+    printMemory("STOP");
+  }
+
+  private static void printMemory(String step) {
+    Runtime rt = Runtime.getRuntime();
+
+    long used = rt.totalMemory() - rt.freeMemory();
+
+    System.out.println(step);
+    System.out.println("Used: " + used / 1024 / 1024 + " MB" + " | " + used / 1024 + " KB");
+    System.out.println("Total: " + rt.totalMemory() / 1024 / 1024 + " MB");
+    System.out.println("Max: " + rt.maxMemory() / 1024 / 1024 + " MB");
+    System.out.println("------");
   }
 }
