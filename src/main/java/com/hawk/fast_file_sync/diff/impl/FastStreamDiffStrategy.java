@@ -100,4 +100,9 @@ public class FastStreamDiffStrategy implements StreamDiffStrategy {
     return buffer.freeze();
   }
 
+  public void reset() {
+    buffer.clear();
+    index.clear();
+  }
+
 }

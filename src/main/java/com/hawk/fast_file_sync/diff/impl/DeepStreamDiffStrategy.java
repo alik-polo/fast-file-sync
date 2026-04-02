@@ -106,4 +106,9 @@ public class DeepStreamDiffStrategy implements StreamDiffStrategy {
   public BufferSnapshot snapshot() {
     return buffer.freeze();
   }
+
+  public void reset() {
+    buffer.clear();
+    index.clear();
+  }
 }
