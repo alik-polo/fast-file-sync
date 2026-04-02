@@ -6,6 +6,5 @@ package com.hawk.fast_file_sync.enums;
 public enum SyncOption {
   LEFT,
   RIGHT,
-  NEW,
-  BOTH
+  NEW
 }

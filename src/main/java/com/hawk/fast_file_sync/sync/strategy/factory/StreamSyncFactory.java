@@ -42,7 +42,6 @@ public class StreamSyncFactory {
       case LEFT -> new LeftStreamSyncStrategy(syncExecutor, conflictHandler);
       case RIGHT -> new RightStreamSyncStrategy(syncExecutor, conflictHandler);
       case NEW -> new NewStreamSyncStrategy(syncExecutor, conflictHandler);
-      case BOTH -> new BothStreamSyncStrategy(syncExecutor, conflictHandler);
     };
   }
 }

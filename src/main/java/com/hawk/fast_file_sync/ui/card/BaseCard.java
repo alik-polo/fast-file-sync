@@ -1,6 +1,7 @@
-package com.hawk.fast_file_sync.ui.cards;
+package com.hawk.fast_file_sync.ui.card;
 
 import com.hawk.fast_file_sync.ui.style.UIConstants;
+import com.hawk.fast_file_sync.ui.theme.manager.ThemeManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -10,8 +11,12 @@ public abstract class BaseCard extends JPanel {
 
   protected BaseCard() {
     setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-    setBackground(UIConstants.CARD_BG);
-    setBorder(new EmptyBorder(30, 30, 30, 30));
+    setBackground(ThemeManager.theme().surface());
+    setBorder(new EmptyBorder(
+        UIConstants.SPACING_L,
+        UIConstants.SPACING_L,
+        UIConstants.SPACING_L,
+        UIConstants.SPACING_L));
   }
 
   protected JPanel wrap() {

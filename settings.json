@@ -1,0 +1,8 @@
+{
+  "symlink-filter" : "0",
+  "broken-filter" : "0",
+  "invalid-name-filter" : "0",
+  "hidden-filter" : "0",
+  "executor" : "SAFE_EXECUTOR",
+  "error-policy" : "FAST_FAIL"
+}

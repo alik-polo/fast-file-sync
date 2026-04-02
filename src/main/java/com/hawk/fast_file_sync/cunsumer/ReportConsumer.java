@@ -10,4 +10,9 @@ public interface ReportConsumer {
   void fail(BufferSnapshot snapshot,
             int index);
 
+  void info(String msg);
+
+  default void clear() {
+  }
+
 }
