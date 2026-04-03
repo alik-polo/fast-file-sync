@@ -1,13 +1,13 @@
 package unit.diff;
 
-import com.hawk.fast_file_sync.buffer.EntryBuffer;
-import com.hawk.fast_file_sync.diff.StreamDiffStrategy;
-import com.hawk.fast_file_sync.diff.impl.DeepStreamDiffStrategy;
-import com.hawk.fast_file_sync.enums.FileStatus;
-import com.hawk.fast_file_sync.enums.FileType;
-import com.hawk.fast_file_sync.index.Index;
-import com.hawk.fast_file_sync.index.impl.InMemoryIndex;
-import com.hawk.fast_file_sync.model.BufferSnapshot;
+import com.hawk.fastfilesync.buffer.EntryBuffer;
+import com.hawk.fastfilesync.diff.StreamDiffStrategy;
+import com.hawk.fastfilesync.diff.impl.DeepStreamDiffStrategy;
+import com.hawk.fastfilesync.enums.FileStatus;
+import com.hawk.fastfilesync.enums.FileType;
+import com.hawk.fastfilesync.index.Index;
+import com.hawk.fastfilesync.index.impl.InMemoryIndex;
+import com.hawk.fastfilesync.model.BufferSnapshot;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
