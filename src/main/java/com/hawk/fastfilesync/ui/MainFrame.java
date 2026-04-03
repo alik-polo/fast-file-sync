@@ -15,6 +15,7 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -63,7 +64,6 @@ public class MainFrame extends JFrame {
 
     add(new TitleBar(), BorderLayout.NORTH);
     add(new Sidebar(cardLayout, contentPanel), BorderLayout.WEST);
-
     add(createContentWithLogs(), BorderLayout.CENTER);
 
     sessionManager.setSessionCreatedListener(session ->
@@ -81,37 +81,36 @@ public class MainFrame extends JFrame {
   private Component createContentWithLogs() {
     logPane.setEditable(false);
     logPane.setFont(new Font("JetBrains Mono", Font.PLAIN, 13));
-
     logPane.setBackground(new Color(30, 30, 30));
     logPane.setCaretColor(Color.WHITE);
 
-    JScrollPane logScroll = new JScrollPane(logPane);
+    JScrollPane logScroll = new JScrollPane(logPane,
+        JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+        JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
     logScroll.setBorder(BorderFactory.createEmptyBorder());
     logScroll.getViewport().setBackground(logPane.getBackground());
 
-    JScrollPane contentScroll = new JScrollPane(createContent());
-    contentScroll.setBorder(BorderFactory.createEmptyBorder());
-    contentScroll.getVerticalScrollBar().setUnitIncrement(16);
+    // Минимальные размеры, чтобы JSplitPane позволял растягивать панели
+    contentPanel.setMinimumSize(new Dimension(100, 100));
+    logScroll.setMinimumSize(new Dimension(100, 50));
 
-    JSplitPane splitPane = new JSplitPane(
-        JSplitPane.VERTICAL_SPLIT,
-        contentScroll,
-        logScroll
-    );
+    JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+        contentPanel,
+        logScroll);
 
-    splitPane.setDividerLocation(500);
-    splitPane.setResizeWeight(0.8);
+    splitPane.setDividerLocation(0.5); // стартовая позиция
+    splitPane.setResizeWeight(0.0);    // свободное изменение размеров пользователем
+    splitPane.setOneTouchExpandable(false);
+
+    createContent();
 
     return splitPane;
   }
 
   /**
    * Creates the content panel with cards for different views.
-   *
-   * @return the content JPanel
    */
-
-  private JPanel createContent() {
+  private void createContent() {
     contentPanel.setBorder(BorderFactory.createEmptyBorder(
         UiConstants.SPACING_L,
         UiConstants.SPACING_L,
@@ -124,7 +123,5 @@ public class MainFrame extends JFrame {
     contentPanel.add(new SettingsCard(), "settings");
 
     cardLayout.show(contentPanel, "home");
-
-    return contentPanel;
   }
 }
