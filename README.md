@@ -54,8 +54,7 @@ Project is in early development stage.
 
 Current focus:
 - UI
-- Benchmark module
-- Local tests
+- Tests on real data
 
 ---
 
@@ -68,7 +67,7 @@ Current focus:
 - [X] Application configuration
 - [X] Tests
 - [X] GUI interface
-- [ ] Benchmark module
+- [X] Benchmark module
 
 ---
 

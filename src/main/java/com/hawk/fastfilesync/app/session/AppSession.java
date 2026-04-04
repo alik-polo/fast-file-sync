@@ -68,14 +68,14 @@ public class AppSession implements AutoCloseable {
    * @param left the left directory path
    * @param right the right directory path
    * @param diffOption the difference calculation option
-   * @param localReportConsumer a consumer to report local scan progress
+   * @param reportConsumer a consumer to report local scan progress
    * @throws OperationCancelledException if the scan is cancelled
    * @throws TraversalException if an error occurs during file traversal
    */
   public void runScan(Path left,
                       Path right,
                       DiffOption diffOption,
-                      ReportConsumer localReportConsumer)
+                      ReportConsumer reportConsumer)
       throws OperationCancelledException, TraversalException {
 
     ensureNotClosed();
@@ -94,7 +94,7 @@ public class AppSession implements AutoCloseable {
 
     FileScanner scanner = config.fileScanner();
 
-    localReportConsumer.info("Started scanning...");
+    reportConsumer.operationNotice("Started scanning...");
 
     scanner.scan(left, diffStrategy::addLeft, cancellationToken);
     scanner.scan(right, diffStrategy::addRight, cancellationToken);
@@ -115,15 +115,15 @@ public class AppSession implements AutoCloseable {
         rightOnly++;
       }
 
-      reportConsumer.info(FileStatus.fromValue(
+      this.reportConsumer.info(FileStatus.fromValue(
           snapshot.getStatus(i)) + " | " + snapshot.getRelativePath(i)
       );
     }
 
-    reportConsumer.info("Completed scanning. Total files: " + snapshot.getSnapshotSize());
-    reportConsumer.info("Same files: " + same);
-    reportConsumer.info("Left only files: " + leftOnly);
-    reportConsumer.info("Right only files: " + rightOnly);
+    this.reportConsumer.operationNotice("Completed scanning. Total files: " + snapshot.getSnapshotSize());
+    this.reportConsumer.info("Same files: " + same);
+    this.reportConsumer.info("Left only files: " + leftOnly);
+    this.reportConsumer.info("Right only files: " + rightOnly);
   }
 
   /**
@@ -221,10 +221,8 @@ public class AppSession implements AutoCloseable {
   }
 
   private void ensureState() {
-    if (state != State.SCANNED) {
-      throw new IllegalStateException(
-          "Invalid session state. Expected: " + State.SCANNED + ", actual: " + state
-      );
+    if (state == State.CREATED || state == State.CLOSED) {
+      throw new IllegalStateException("Session not ready");
     }
   }
 

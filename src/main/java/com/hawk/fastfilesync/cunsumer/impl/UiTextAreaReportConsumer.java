@@ -72,6 +72,11 @@ public class UiTextAreaReportConsumer implements ReportConsumer {
   }
 
   @Override
+  public void operationNotice(String msg) {
+    append("[NOTICE] " + msg, Color.YELLOW);
+  }
+
+  @Override
   public void clear() {
     SwingUtilities.invokeLater(() -> logPane.setText(""));
   }

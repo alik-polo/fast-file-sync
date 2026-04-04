@@ -90,7 +90,6 @@ public class MainFrame extends JFrame {
     logScroll.setBorder(BorderFactory.createEmptyBorder());
     logScroll.getViewport().setBackground(logPane.getBackground());
 
-    // Минимальные размеры, чтобы JSplitPane позволял растягивать панели
     contentPanel.setMinimumSize(new Dimension(100, 100));
     logScroll.setMinimumSize(new Dimension(100, 50));
 
@@ -98,8 +97,8 @@ public class MainFrame extends JFrame {
         contentPanel,
         logScroll);
 
-    splitPane.setDividerLocation(0.5); // стартовая позиция
-    splitPane.setResizeWeight(0.0);    // свободное изменение размеров пользователем
+    splitPane.setDividerLocation(0.5);
+    splitPane.setResizeWeight(0.0);
     splitPane.setOneTouchExpandable(false);
 
     createContent();

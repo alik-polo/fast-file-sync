@@ -34,4 +34,12 @@ public class NoOpReportConsumer implements ReportConsumer {
    */
   @Override
   public void info(String msg) {}
+
+  /**
+   * Does nothing for operation notification.
+   *
+   * @param msg the message
+   */
+  @Override
+  public void operationNotice(String msg) {}
 }

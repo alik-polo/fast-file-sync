@@ -4,6 +4,7 @@ import com.hawk.fastfilesync.app.session.AppSession;
 import com.hawk.fastfilesync.app.session.manager.SessionManager;
 import com.hawk.fastfilesync.enums.ConflictOption;
 import com.hawk.fastfilesync.enums.SyncOption;
+import com.hawk.fastfilesync.ui.component.Spinner;
 import com.hawk.fastfilesync.ui.component.UiComponents;
 import com.hawk.fastfilesync.ui.style.UiConstants;
 import com.hawk.fastfilesync.ui.theme.manager.ThemeManager;
@@ -20,7 +21,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
@@ -34,12 +34,12 @@ public class SyncCard extends BaseCard {
   private SyncOption syncOption = SyncOption.NEW;
   private ConflictOption conflictOption = ConflictOption.SAVE_BIGGEST;
 
+  private final Spinner spinner;
   private SwingWorker<Void, Void> worker;
 
   /**
-   * Constructs a SyncCard with the given session manager.
-   *
-   * @param sessionManager the session manager to handle sync sessions
+   * Creates the sync card UI with controls and actions.
+   * Initializes layout, sections, buttons, and spinner.
    */
   public SyncCard(SessionManager sessionManager) {
     this.sessionManager = sessionManager;
@@ -58,35 +58,31 @@ public class SyncCard extends BaseCard {
     add(createSection("Conflict Handling", createConflictOptionsPanel()));
     add(Box.createVerticalStrut(UiConstants.SPACING_L));
 
-
     JPanel actions = new JPanel();
     actions.setOpaque(false);
     actions.setLayout(new BoxLayout(actions, BoxLayout.X_AXIS));
 
     JButton start = UiComponents.primaryButton("Start Sync");
     JButton stop = UiComponents.primaryButton("Stop Sync");
+
     stop.setEnabled(false);
 
     actions.add(start);
     actions.add(Box.createHorizontalStrut(UiConstants.SPACING_S));
     actions.add(stop);
 
-    JProgressBar bar = createStyledProgressBar();
-    bar.setVisible(false);
-
-    start.addActionListener(e -> startSync(start, stop, bar));
-    stop.addActionListener(e -> stopSync(start, stop, bar));
+    spinner = new Spinner();
+    spinner.setVisible(false);
+    spinner.setAlignmentX(LEFT_ALIGNMENT);
 
     add(actions);
     add(Box.createVerticalStrut(UiConstants.SPACING_M));
-    add(bar);
+    add(spinner);
+
+    start.addActionListener(e -> startSync(start, stop));
+    stop.addActionListener(e -> stopSync(start, stop));
   }
 
-  /**
-   * Creates the header component for the sync card.
-   *
-   * @return a JComponent containing the header
-   */
   private JComponent createHeader() {
     JLabel title = new JLabel("Directory Sync");
     title.setFont(UiConstants.TITLE_FONT);
@@ -95,11 +91,6 @@ public class SyncCard extends BaseCard {
     return title;
   }
 
-  /**
-   * Creates the info label component.
-   *
-   * @return a JComponent containing info text
-   */
   private JComponent createInfo() {
     JLabel info = new JLabel("Using results from last scan");
     info.setFont(UiConstants.BODY_FONT);
@@ -108,15 +99,7 @@ public class SyncCard extends BaseCard {
     return info;
   }
 
-  /**
-   * Creates a section panel with a title and content.
-   *
-   * @param title the section title
-   * @param content the section content component
-   * @return a JPanel representing the section
-   */
   private JPanel createSection(String title, JComponent content) {
-
     JPanel panel = column();
 
     JLabel label = new JLabel(title);
@@ -130,11 +113,6 @@ public class SyncCard extends BaseCard {
     return panel;
   }
 
-  /**
-   * Creates the panel for selecting sync options.
-   *
-   * @return a JPanel containing sync option controls
-   */
   private JPanel createSyncOptionsPanel() {
 
     JComboBox<SyncOption> combo = new JComboBox<>(SyncOption.values());
@@ -151,11 +129,6 @@ public class SyncCard extends BaseCard {
     return panel;
   }
 
-  /**
-   * Creates the panel for selecting conflict handling options.
-   *
-   * @return a JPanel containing conflict option controls
-   */
   private JPanel createConflictOptionsPanel() {
 
     JComboBox<ConflictOption> combo = new JComboBox<>(ConflictOption.values());
@@ -172,13 +145,6 @@ public class SyncCard extends BaseCard {
     return panel;
   }
 
-  /**
-   * Creates a row with a label and component.
-   *
-   * @param labelText the row label
-   * @param component the component for the row
-   * @return a JPanel representing the row
-   */
   private JPanel createRow(String labelText, JComponent component) {
 
     JPanel row = new JPanel(new BorderLayout());
@@ -197,11 +163,6 @@ public class SyncCard extends BaseCard {
     return row;
   }
 
-  /**
-   * Creates a vertical column panel.
-   *
-   * @return a JPanel with vertical BoxLayout
-   */
   private JPanel column() {
     JPanel panel = new JPanel();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -210,11 +171,6 @@ public class SyncCard extends BaseCard {
     return panel;
   }
 
-  /**
-   * Styles a combo box with theme colors and size.
-   *
-   * @param combo the JComboBox to style
-   */
   private void styleCombo(JComboBox<?> combo) {
     combo.setFocusable(false);
     combo.setBackground(ThemeManager.theme().inputBackground());
@@ -225,28 +181,7 @@ public class SyncCard extends BaseCard {
     combo.setPreferredSize(new Dimension(180, 28));
   }
 
-  /**
-   * Creates a styled progress bar for sync operations.
-   *
-   * @return a JProgressBar with custom styling
-   */
-  private JProgressBar createStyledProgressBar() {
-    JProgressBar bar = new JProgressBar();
-    bar.setStringPainted(true);
-    bar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
-    bar.setBackground(ThemeManager.theme().secondarySurface());
-    bar.setForeground(ThemeManager.theme().accent());
-    return bar;
-  }
-
-  /**
-   * Starts the directory sync process and updates UI components.
-   *
-   * @param start the start button
-   * @param stop the stop button
-   * @param bar the progress bar
-   */
-  private void startSync(JButton start, JButton stop, JProgressBar bar) {
+  private void startSync(JButton start, JButton stop) {
 
     if (worker != null && !worker.isDone()) {
       return;
@@ -263,8 +198,7 @@ public class SyncCard extends BaseCard {
 
       start.setEnabled(false);
       stop.setEnabled(true);
-      bar.setVisible(true);
-      bar.setValue(0);
+      spinner.start();
 
       worker = new SwingWorker<>() {
 
@@ -293,9 +227,10 @@ public class SyncCard extends BaseCard {
 
         @Override
         protected void done() {
+          sessionManager.cancelCurrentSession();
           start.setEnabled(true);
           stop.setEnabled(false);
-          bar.setValue(isCancelled() ? 0 : 100);
+          spinner.stop();
         }
       };
 
@@ -309,18 +244,12 @@ public class SyncCard extends BaseCard {
           JOptionPane.ERROR_MESSAGE
       );
 
+      spinner.stop();
       start.setEnabled(true);
       stop.setEnabled(false);
-      bar.setValue(0);
     }
   }
 
-  /**
-   * Resolves the target directory based on the selected sync option.
-   *
-   * @param session the current session
-   * @return the Path of the target directory or null if canceled
-   */
   private Path resolveTarget(AppSession session) {
     return switch (syncOption) {
       case LEFT -> session.getLeft();
@@ -340,20 +269,14 @@ public class SyncCard extends BaseCard {
     };
   }
 
-  /**
-   * Stops the currently running sync and resets UI components.
-   *
-   * @param start the start button
-   * @param stop the stop button
-   * @param bar the progress bar
-   */
-  private void stopSync(JButton start, JButton stop, JProgressBar bar) {
+  private void stopSync(JButton start, JButton stop) {
     if (worker != null && !worker.isDone()) {
-      sessionManager.cancelCurrentSession();
       worker.cancel(true);
+      sessionManager.cancelCurrentSession();
     }
+
     start.setEnabled(true);
     stop.setEnabled(false);
-    bar.setValue(0);
+    spinner.stop();
   }
 }

@@ -47,6 +47,12 @@ public class SyncEngine {
                       CancellationToken cancellationToken)
       throws OperationCancelledException {
 
+    if (snapshot.getSnapshotSize() < 1) {
+      throw new IllegalArgumentException("Buffer is empty!");
+    }
+
+    reportConsumer.operationNotice("Started synchronizing...");
+
     for (int i = 0; i < snapshot.getSnapshotSize(); i++) {
       try {
         cancellationToken.throwIfCancelled();
@@ -63,5 +69,6 @@ public class SyncEngine {
         errorPolicy.handle(e);
       }
     }
+    reportConsumer.operationNotice("Completed synchronizing.");
   }
 }

@@ -5,10 +5,10 @@ import com.hawk.fastfilesync.app.session.manager.SessionManager;
 import com.hawk.fastfilesync.cunsumer.ReportConsumer;
 import com.hawk.fastfilesync.enums.DiffOption;
 import com.hawk.fastfilesync.ui.component.PathField;
+import com.hawk.fastfilesync.ui.component.Spinner;
 import com.hawk.fastfilesync.ui.component.UiComponents;
 import com.hawk.fastfilesync.ui.style.UiConstants;
 import com.hawk.fastfilesync.ui.theme.manager.ThemeManager;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.nio.file.Path;
 import javax.swing.BorderFactory;
@@ -20,25 +20,24 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
 
 /**
- * Card component for scanning directories and displaying scan progress.
+ * Card component for scanning directories.
  */
 public class ScanCard extends BaseCard {
 
   private final SessionManager sessionManager;
   private final ReportConsumer reportConsumer;
+
   private String scanStrategy = DiffOption.FAST.name();
 
+  private final Spinner spinner;
   private SwingWorker<Void, Integer> worker;
 
   /**
-   * Constructs a ScanCard with the given session manager and report consumer.
-   *
-   * @param sessionManager the session manager to handle scan sessions
-   * @param reportConsumer the consumer to receive scan reports
+   * Creates the scan card UI with directory inputs and controls.
+   * Initializes layout, fields, strategy options, buttons, and spinner.
    */
   public ScanCard(SessionManager sessionManager, ReportConsumer reportConsumer) {
     this.sessionManager = sessionManager;
@@ -66,28 +65,25 @@ public class ScanCard extends BaseCard {
 
     JButton start = UiComponents.primaryButton("Start Scan");
     JButton stop = UiComponents.primaryButton("Stop Scan");
+
     stop.setEnabled(false);
 
     actions.add(start);
     actions.add(Box.createHorizontalStrut(UiConstants.SPACING_S));
     actions.add(stop);
 
-    JProgressBar bar = createStyledProgressBar();
-    bar.setVisible(false);
-
-    start.addActionListener(e -> startScan(leftField, rightField, start, stop, bar));
-    stop.addActionListener(e -> stopScan(start, stop, bar));
+    spinner = new Spinner();
+    spinner.setVisible(false);
+    spinner.setAlignmentX(LEFT_ALIGNMENT);
 
     add(actions);
     add(Box.createVerticalStrut(UiConstants.SPACING_M));
-    add(bar);
+    add(spinner);
+
+    start.addActionListener(e -> startScan(leftField, rightField, start, stop));
+    stop.addActionListener(e -> stopScan(start, stop));
   }
 
-  /**
-   * Creates the header component for the scan card.
-   *
-   * @return a JComponent containing the header
-   */
   private JComponent createHeader() {
     JLabel title = new JLabel("Directory Scan");
     title.setFont(UiConstants.TITLE_FONT);
@@ -96,21 +92,11 @@ public class ScanCard extends BaseCard {
     return title;
   }
 
-  /**
-   * Starts a directory scan using the provided input fields and UI components.
-   *
-   * @param leftField the field for the left directory
-   * @param rightField the field for the right directory
-   * @param start the start button
-   * @param stop the stop button
-   * @param bar the progress bar
-   */
   private void startScan(
       PathField leftField,
       PathField rightField,
       JButton start,
-      JButton stop,
-      JProgressBar bar) {
+      JButton stop) {
 
     reportConsumer.clear();
 
@@ -136,8 +122,7 @@ public class ScanCard extends BaseCard {
 
     start.setEnabled(false);
     stop.setEnabled(true);
-    bar.setVisible(true);
-    bar.setValue(0);
+    spinner.start();
 
     try {
       AppSession session = sessionManager.createSession();
@@ -155,6 +140,7 @@ public class ScanCard extends BaseCard {
               scanStrategy.equals("FAST") ? DiffOption.FAST : DiffOption.DEEP,
               reportConsumer
           );
+
           return null;
         }
 
@@ -162,7 +148,7 @@ public class ScanCard extends BaseCard {
         protected void done() {
           start.setEnabled(true);
           stop.setEnabled(false);
-          bar.setValue(isCancelled() ? 0 : 100);
+          spinner.stop();
         }
       };
 
@@ -175,35 +161,24 @@ public class ScanCard extends BaseCard {
           "Error",
           JOptionPane.ERROR_MESSAGE
       );
+
+      spinner.stop();
       start.setEnabled(true);
       stop.setEnabled(false);
-      bar.setValue(0);
     }
   }
 
-  /**
-   * Stops the currently running scan and resets UI components.
-   *
-   * @param start the start button
-   * @param stop the stop button
-   * @param bar the progress bar
-   */
-  private void stopScan(JButton start, JButton stop, JProgressBar bar) {
+  private void stopScan(JButton start, JButton stop) {
     if (worker != null && !worker.isDone()) {
-      sessionManager.cancelCurrentSession();
       worker.cancel(true);
+      sessionManager.cancelCurrentSession();
     }
 
     start.setEnabled(true);
     stop.setEnabled(false);
-    bar.setValue(0);
+    spinner.stop();
   }
 
-  /**
-   * Creates the panel to select scan strategy.
-   *
-   * @return a JPanel containing strategy selection controls
-   */
   private JPanel createStrategyPanel() {
 
     JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
@@ -229,19 +204,5 @@ public class ScanCard extends BaseCard {
     panel.add(combo);
 
     return panel;
-  }
-
-  /**
-   * Creates a styled progress bar for the scan process.
-   *
-   * @return a JProgressBar with custom styling
-   */
-  private JProgressBar createStyledProgressBar() {
-    JProgressBar bar = new JProgressBar();
-    bar.setStringPainted(true);
-    bar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
-    bar.setBackground(ThemeManager.theme().secondarySurface());
-    bar.setForeground(ThemeManager.theme().accent());
-    return bar;
   }
 }

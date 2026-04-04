@@ -35,6 +35,13 @@ public interface ReportConsumer {
   void info(String msg);
 
   /**
+   * Reports an operation notification.
+   *
+   * @param msg the message to report
+   */
+  void operationNotice(String msg);
+
+  /**
    * Clears any internal state or messages.
    * Default implementation does nothing.
    */
