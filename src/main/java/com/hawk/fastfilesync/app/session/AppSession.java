@@ -11,6 +11,7 @@ import com.hawk.fastfilesync.enums.FileStatus;
 import com.hawk.fastfilesync.enums.SyncOption;
 import com.hawk.fastfilesync.exception.OperationCancelledException;
 import com.hawk.fastfilesync.exception.TraversalException;
+import com.hawk.fastfilesync.exception.UserException;
 import com.hawk.fastfilesync.index.Index;
 import com.hawk.fastfilesync.index.impl.InMemoryIndex;
 import com.hawk.fastfilesync.model.BufferSnapshot;
@@ -75,33 +76,70 @@ public class AppSession implements AutoCloseable {
   public void runScan(Path left,
                       Path right,
                       DiffOption diffOption,
-                      ReportConsumer reportConsumer)
-      throws OperationCancelledException, TraversalException {
+                      ReportConsumer reportConsumer) {
 
     ensureNotClosed();
 
-    this.left = left;
-    this.right = right;
+    try {
+      validatePaths(left, right);
 
-    EntryBuffer buffer = new EntryBuffer(2);
-    Index index = new InMemoryIndex();
+      this.left = left;
+      this.right = right;
 
-    StreamDiffStrategy diffStrategy = StreamDiffFactory.getStrategy(
-        diffOption,
-        buffer,
-        index
-    );
+      EntryBuffer buffer = new EntryBuffer(2);
+      Index index = new InMemoryIndex();
 
-    FileScanner scanner = config.fileScanner();
+      StreamDiffStrategy diffStrategy = StreamDiffFactory.getStrategy(
+          diffOption,
+          buffer,
+          index
+      );
 
-    reportConsumer.operationNotice("Started scanning...");
+      FileScanner scanner = config.fileScanner();
 
-    scanner.scan(left, diffStrategy::addLeft, cancellationToken);
-    scanner.scan(right, diffStrategy::addRight, cancellationToken);
+      reportConsumer.operationNotice("Started scanning...");
 
-    this.snapshot = diffStrategy.snapshot();
-    this.state = State.SCANNED;
+      scanner.scan(left, diffStrategy::addLeft, cancellationToken);
+      scanner.scan(right, diffStrategy::addRight, cancellationToken);
 
+      this.snapshot = diffStrategy.snapshot();
+      this.state = State.SCANNED;
+
+      processStats();
+
+    } catch (OperationCancelledException e) {
+      throw e;
+    } catch (TraversalException e) {
+      throw new UserException("Failed to read files", e);
+    } catch (Exception e) {
+      throw new UserException("Scan failed", e);
+    }
+  }
+
+  private void validatePaths(Path left, Path right) {
+
+    if (left == null || right == null) {
+      throw new UserException("Paths must not be null");
+    }
+
+    if (!left.toFile().exists()) {
+      throw new UserException("Left directory does not exist");
+    }
+
+    if (!right.toFile().exists()) {
+      throw new UserException("Right directory does not exist");
+    }
+
+    if (!left.toFile().isDirectory()) {
+      throw new UserException("Left path is not a directory");
+    }
+
+    if (!right.toFile().isDirectory()) {
+      throw new UserException("Right path is not a directory");
+    }
+  }
+
+  private void processStats() {
     int same = 0;
     int leftOnly = 0;
     int rightOnly = 0;
@@ -115,15 +153,17 @@ public class AppSession implements AutoCloseable {
         rightOnly++;
       }
 
-      this.reportConsumer.info(FileStatus.fromValue(
+      reportConsumer.info(FileStatus.fromValue(
           snapshot.getStatus(i)) + " | " + snapshot.getRelativePath(i)
       );
     }
 
-    this.reportConsumer.operationNotice("Completed scanning. Total files: " + snapshot.getSnapshotSize());
-    this.reportConsumer.info("Same files: " + same);
-    this.reportConsumer.info("Left only files: " + leftOnly);
-    this.reportConsumer.info("Right only files: " + rightOnly);
+    reportConsumer.operationNotice(
+        "Completed scanning. Total files: " + snapshot.getSnapshotSize()
+    );
+    reportConsumer.info("Same files: " + same);
+    reportConsumer.info("Left only files: " + leftOnly);
+    reportConsumer.info("Right only files: " + rightOnly);
   }
 
   /**
@@ -142,33 +182,45 @@ public class AppSession implements AutoCloseable {
                       Path right,
                       Path target,
                       SyncOption syncOption,
-                      ConflictOption conflictOption)
-      throws OperationCancelledException, TraversalException {
+                      ConflictOption conflictOption) {
 
     ensureState();
 
-    ConflictHandler conflictHandler = ConflictHandlerFactory.getConflictMode(
-        conflictOption,
-        config.executor()
-    );
+    try {
 
-    StreamSyncStrategy syncStrategy = StreamSyncFactory.getStrategy(
-        syncOption,
-        config.executor(),
-        conflictHandler
-    );
+      validatePaths(left, right);
 
-    ErrorHandlingPolicy policy = config.errorPolicy();
-    config.syncEngine(reportConsumer, policy).process(
-        left,
-        right,
-        target,
-        snapshot,
-        syncStrategy,
-        cancellationToken
-    );
+      ConflictHandler conflictHandler = ConflictHandlerFactory.getConflictMode(
+          conflictOption,
+          config.executor()
+      );
 
-    this.state = State.SYNCED;
+      StreamSyncStrategy syncStrategy = StreamSyncFactory.getStrategy(
+          syncOption,
+          config.executor(),
+          conflictHandler
+      );
+
+      ErrorHandlingPolicy policy = config.errorPolicy();
+
+      config.syncEngine(reportConsumer, policy).process(
+          left,
+          right,
+          target,
+          snapshot,
+          syncStrategy,
+          cancellationToken
+      );
+
+      this.state = State.SYNCED;
+
+    } catch (OperationCancelledException e) {
+      throw e;
+    } catch (TraversalException e) {
+      throw new UserException("Failed during sync", e);
+    } catch (Exception e) {
+      throw new UserException("Sync failed", e);
+    }
   }
 
   /**
@@ -222,13 +274,13 @@ public class AppSession implements AutoCloseable {
 
   private void ensureState() {
     if (state == State.CREATED || state == State.CLOSED) {
-      throw new IllegalStateException("Session not ready");
+      throw new UserException("Session is not ready");
     }
   }
 
   private void ensureNotClosed() {
     if (state == State.CLOSED) {
-      throw new IllegalStateException("Session is closed");
+      throw new UserException("Session is already closed");
     }
   }
 }

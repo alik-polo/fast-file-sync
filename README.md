@@ -55,6 +55,7 @@ Project is in early development stage.
 Current focus:
 - UI
 - Tests on real data
+- Logging
 
 ---
 
@@ -68,6 +69,7 @@ Current focus:
 - [X] Tests
 - [X] GUI interface
 - [X] Benchmark module
+- [ ] Logging
 
 ---
 

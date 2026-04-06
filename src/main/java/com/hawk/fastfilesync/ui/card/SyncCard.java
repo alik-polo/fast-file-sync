@@ -4,6 +4,7 @@ import com.hawk.fastfilesync.app.session.AppSession;
 import com.hawk.fastfilesync.app.session.manager.SessionManager;
 import com.hawk.fastfilesync.enums.ConflictOption;
 import com.hawk.fastfilesync.enums.SyncOption;
+import com.hawk.fastfilesync.exception.UserException;
 import com.hawk.fastfilesync.ui.component.Spinner;
 import com.hawk.fastfilesync.ui.component.UiComponents;
 import com.hawk.fastfilesync.ui.style.UiConstants;
@@ -21,7 +22,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 /**
@@ -187,67 +187,61 @@ public class SyncCard extends BaseCard {
       return;
     }
 
+    AppSession session;
     try {
-      AppSession session = sessionManager.getCurrentSession()
-          .orElseThrow(() -> new IllegalStateException("Scan must be executed first"));
+      session = sessionManager.getCurrentSession()
+          .orElseThrow(() -> new UserException("Please run scan first"));
+    } catch (Exception e) {
+      handleSystemError(e);
+      return;
+    }
 
-      Path target = resolveTarget(session);
-      if (target == null) {
-        return;
+    Path target = resolveTarget(session);
+    if (target == null) {
+      return;
+    }
+
+    start.setEnabled(false);
+    stop.setEnabled(true);
+    spinner.start();
+
+    worker = new SwingWorker<>() {
+
+      @Override
+      protected Void doInBackground() throws Exception {
+        session.runSync(
+            session.getLeft(),
+            session.getRight(),
+            target,
+            syncOption,
+            conflictOption
+        );
+        return null;
       }
 
-      start.setEnabled(false);
-      stop.setEnabled(true);
-      spinner.start();
+      @Override
+      protected void done() {
+        try {
+          get();
 
-      worker = new SwingWorker<>() {
+        } catch (Exception e) {
 
-        @Override
-        protected Void doInBackground() {
-          try {
-            session.runSync(
-                session.getLeft(),
-                session.getRight(),
-                target,
-                syncOption,
-                conflictOption
-            );
-          } catch (Exception e) {
-            SwingUtilities.invokeLater(() ->
-                JOptionPane.showMessageDialog(
-                    SyncCard.this,
-                    "Sync failed: " + e.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-                )
-            );
+          Throwable cause = e.getCause();
+
+          if (cause instanceof UserException userEx) {
+            showError(userEx.getMessage());
+          } else if (cause instanceof java.util.concurrent.CancellationException) {
+          } else {
+            handleSystemError(cause);
           }
-          return null;
         }
 
-        @Override
-        protected void done() {
-          sessionManager.cancelCurrentSession();
-          start.setEnabled(true);
-          stop.setEnabled(false);
-          spinner.stop();
-        }
-      };
+        sessionManager.cancelCurrentSession();
+        resetUI(start, stop);
+      }
+    };
 
-      worker.execute();
-
-    } catch (Exception e) {
-      JOptionPane.showMessageDialog(
-          this,
-          "Failed to start sync: " + e.getMessage(),
-          "Error",
-          JOptionPane.ERROR_MESSAGE
-      );
-
-      spinner.stop();
-      start.setEnabled(true);
-      stop.setEnabled(false);
-    }
+    worker.execute();
   }
 
   private Path resolveTarget(AppSession session) {
@@ -275,6 +269,24 @@ public class SyncCard extends BaseCard {
       sessionManager.cancelCurrentSession();
     }
 
+    resetUI(start, stop);
+  }
+
+  private void showError(String message) {
+    JOptionPane.showMessageDialog(
+        this,
+        message,
+        "Error",
+        JOptionPane.ERROR_MESSAGE
+    );
+  }
+
+  private void handleSystemError(Throwable e) {
+    e.printStackTrace(); // log
+    showError("Something went wrong. Please try again.");
+  }
+
+  private void resetUI(JButton start, JButton stop) {
     start.setEnabled(true);
     stop.setEnabled(false);
     spinner.stop();

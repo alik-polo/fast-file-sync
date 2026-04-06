@@ -4,6 +4,7 @@ import com.hawk.fastfilesync.app.session.AppSession;
 import com.hawk.fastfilesync.app.session.manager.SessionManager;
 import com.hawk.fastfilesync.cunsumer.ReportConsumer;
 import com.hawk.fastfilesync.enums.DiffOption;
+import com.hawk.fastfilesync.exception.UserException;
 import com.hawk.fastfilesync.ui.component.PathField;
 import com.hawk.fastfilesync.ui.component.Spinner;
 import com.hawk.fastfilesync.ui.component.UiComponents;
@@ -33,7 +34,7 @@ public class ScanCard extends BaseCard {
   private String scanStrategy = DiffOption.FAST.name();
 
   private final Spinner spinner;
-  private SwingWorker<Void, Integer> worker;
+  private SwingWorker<Void, Void> worker;
 
   /**
    * Creates the scan card UI with directory inputs and controls.
@@ -117,6 +118,7 @@ public class ScanCard extends BaseCard {
     }
 
     if (!valid) {
+      showError("Please select both directories");
       return;
     }
 
@@ -124,48 +126,55 @@ public class ScanCard extends BaseCard {
     stop.setEnabled(true);
     spinner.start();
 
+    AppSession session;
     try {
-      AppSession session = sessionManager.createSession();
-
-      worker = new SwingWorker<>() {
-        @Override
-        protected Void doInBackground() {
-
-          Path left = Path.of(leftField.getText());
-          Path right = Path.of(rightField.getText());
-
-          session.runScan(
-              left,
-              right,
-              scanStrategy.equals("FAST") ? DiffOption.FAST : DiffOption.DEEP,
-              reportConsumer
-          );
-
-          return null;
-        }
-
-        @Override
-        protected void done() {
-          start.setEnabled(true);
-          stop.setEnabled(false);
-          spinner.stop();
-        }
-      };
-
-      worker.execute();
-
+      session = sessionManager.createSession();
     } catch (Exception e) {
-      JOptionPane.showMessageDialog(
-          this,
-          "Failed to start scan: " + e.getMessage(),
-          "Error",
-          JOptionPane.ERROR_MESSAGE
-      );
-
-      spinner.stop();
-      start.setEnabled(true);
-      stop.setEnabled(false);
+      handleSystemError(e);
+      resetUI(start, stop);
+      return;
     }
+
+    worker = new SwingWorker<>() {
+
+      @Override
+      protected Void doInBackground() throws Exception {
+
+        Path left = Path.of(leftField.getText());
+        Path right = Path.of(rightField.getText());
+
+        session.runScan(
+            left,
+            right,
+            scanStrategy.equals("FAST") ? DiffOption.FAST : DiffOption.DEEP,
+            reportConsumer
+        );
+
+        return null;
+      }
+
+      @Override
+      protected void done() {
+        try {
+          get();
+
+        } catch (Exception e) {
+
+          Throwable cause = e.getCause();
+
+          if (cause instanceof UserException userEx) {
+            showError(userEx.getMessage());
+          } else if (cause instanceof java.util.concurrent.CancellationException) {
+          } else {
+            handleSystemError(cause);
+          }
+        }
+
+        resetUI(start, stop);
+      }
+    };
+
+    worker.execute();
   }
 
   private void stopScan(JButton start, JButton stop) {
@@ -174,9 +183,7 @@ public class ScanCard extends BaseCard {
       sessionManager.cancelCurrentSession();
     }
 
-    start.setEnabled(true);
-    stop.setEnabled(false);
-    spinner.stop();
+    resetUI(start, stop);
   }
 
   private JPanel createStrategyPanel() {
@@ -204,5 +211,25 @@ public class ScanCard extends BaseCard {
     panel.add(combo);
 
     return panel;
+  }
+
+  private void showError(String message) {
+    JOptionPane.showMessageDialog(
+        this,
+        message,
+        "Error",
+        JOptionPane.ERROR_MESSAGE
+    );
+  }
+
+  private void handleSystemError(Throwable e) {
+    e.printStackTrace(); // logs
+    showError("Something went wrong. Please try again.");
+  }
+
+  private void resetUI(JButton start, JButton stop) {
+    start.setEnabled(true);
+    stop.setEnabled(false);
+    spinner.stop();
   }
 }
